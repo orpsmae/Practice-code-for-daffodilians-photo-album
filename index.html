@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Section Daffodil — Memory Album</title>
+  <style>
+    :root {
+      --bg-color: #fffdf0;
+      --primary: #ffd54f;
+      --primary-dark: #f57f17;
+      --card-bg: #ffffff;
+      --text-color: #3e2723;
+      --accent: #fff59d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* 1. START / SPLASH SCREEN */
+    #splashScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #fff59d, #ffd54f);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      text-align: center;
+      padding: 2rem;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    #splashScreen h1 {
+      font-size: 3rem;
+      color: var(--primary-dark);
+      margin-bottom: 0.8rem;
+    }
+
+    #splashScreen p {
+      font-size: 1.2rem;
+      color: #5d4037;
+      margin-bottom: 2rem;
+    }
+
+    .enter-btn {
+      background-color: var(--primary-dark);
+      color: #ffffff;
+      border: none;
+      padding: 1rem 2.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(245, 127, 23, 0.4);
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .enter-btn:hover {
+      transform: scale(1.05);
+      background-color: #e65100;
+    }
+
+    /* ALBUM CONTENT (hidden until user taps start) */
+    #mainContent {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    header {
+      background: linear-gradient(135deg, #ffe082, #ffd54f);
+      text-align: center;
+      padding: 2.5rem 1rem 1.5rem;
+      border-bottom: 4px solid var(--primary-dark);
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      color: var(--primary-dark);
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+    }
+
+    header p {
+      font-size: 1rem;
+      color: #5d4037;
+      font-weight: 500;
+    }
+
+    /* Month Navigation Tabs */
+    nav {
+      background-color: #fff8e1;
+      padding: 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      border-bottom: 2px solid #ffe082;
+    }
+
+    .tab-btn {
+      text-decoration: none;
+      color: var(--text-color);
+      background-color: #ffffff;
+      padding: 0.6rem 1.2rem;
+      border-radius: 20px;
+      font-weight: 600;
+      border: 2px solid var(--primary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background-color: var(--primary-dark);
+      color: #ffffff;
+      border-color: var(--primary-dark);
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      min-height: 60vh;
+    }
+
+    /* Each Month Section is hidden by default */
+    .month-section {
+      display: none;
+    }
+
+    /* Only active month is visible */
+    .month-section.active {
+      display: block;
+    }
+
+    .month-title {
+      font-size: 1.8rem;
+      color: var(--primary-dark);
+      background-color: var(--accent);
+      padding: 0.6rem 1.2rem;
+      border-left: 6px solid var(--primary-dark);
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+    }
+
+    /* Gallery Grid for 10 Photos */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.2rem;
+    }
+
+    .photo-card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 1px solid #ffe082;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .photo-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+    .photo-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      display: block;
+      background-color: #f5f5f5;
+    }
+
+    .photo-caption {
+      padding: 0.8rem;
+      font-size: 0.9rem;
+      color: #4e342e;
+    }
+
+    /* Lightbox Modal */
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 3000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 1rem;
+    }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 80vh;
+      border-radius: 8px;
+      border: 4px solid var(--primary);
+      box-shadow: 0 0 25px rgba(255, 213, 79, 0.3);
+    }
+
+    .lightbox-caption {
+      color: #ffffff;
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: #ffffff;
+      font-size: 2.5rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      background-color: #fff8e1;
+      border-top: 2px solid #ffe082;
+      color: #6d4c41;
+      font-weight: 500;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SPLASH SCREEN / TAP TO ENTER -->
+  <div id="splashScreen">
+    <h1>🌼 Section Daffodil 🌼</h1>
+    <p>Welcome to our class memory album!</p>
+    <button class="enter-btn" onclick="enterAlbum()">Tap to Open Album 💛</button>
+  </div>
+
+  <!-- MAIN ALBUM VIEW -->
+  <div id="mainContent">
+
+    <header>
+      <h1>🌼 Section Daffodil 🌼</h1>
+      <p>Our Class Memory Album & Timeline</p>
+    </header>
+
+    <!-- Navigation Buttons for Switching Months -->
+    <nav>
+      <button class="tab-btn active" onclick="switchMonth('january', this)">January</button>
+      <button class="tab-btn" onclick="switchMonth('february', this)">February</button>
+      <button class="tab-btn" onclick="switchMonth('march', this)">March</button>
+      <button class="tab-btn" onclick="switchMonth('april', this)">April</button>
+      <button class="tab-btn" onclick="switchMonth('may', this)">May</button>
+      <button class="tab-btn" onclick="switchMonth('june', this)">June</button>
+    </nav>
+
+    <main>
+      
+      <!-- JANUARY (10 PHOTOS) -->
+      <section id="january" class="month-section active">
+        <h2 class="month-title">January Memories</h2>
+        <div class="gallery">
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="January Photo 1"><div class="photo-caption">January Photo 1</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="January Photo 2"><div class="photo-caption">January Photo 2</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="January Photo 3"><div class="photo-caption">January Photo 3</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="January Photo 4"><div class="photo-caption">January Photo 4</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="January Photo 5"><div class="photo-caption">January Photo 5</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="January Photo 6"><div class="photo-caption">January Photo 6</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="January Photo 7"><div class="photo-caption">January Photo 7</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="January Photo 8"><div class="photo-caption">January Photo 8</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="January Photo 9"><div class="photo-caption">January Photo 9</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="January Photo 10"><div class="photo-caption">January Photo 10</div></div>
+        </div>
+      </section>
+
+      <!-- FEBRUARY (10 PHOTOS) -->
+      <section id="february" class="month-section">
+        <h2 class="month-title">February Memories</h2>
+        <div class="gallery">
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="February Photo 1"><div class="photo-caption">February Photo 1</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="February Photo 2"><div class="photo-caption">February Photo 2</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="February Photo 3"><div class="photo-caption">February Photo 3</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="February Photo 4"><div class="photo-caption">February Photo 4</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="February Photo 5"><div class="photo-caption">February Photo 5</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="February Photo 6"><div class="photo-caption">February Photo 6</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="February Photo 7"><div class="photo-caption">February Photo 7</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="February Photo 8"><div class="photo-caption">February Photo 8</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="February Photo 9"><div class="photo-caption">February Photo 9</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="February Photo 10"><div class="photo-caption">February Photo 10</div></div>
+        </div>
+      </section>
+
+      <!-- MARCH (10 PHOTOS) -->
+      <section id="march" class="month-section">
+        <h2 class="month-title">March Memories</h2>
+        <div class="gallery">
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="March Photo 1"><div class="photo-caption">March Photo 1</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="March Photo 2"><div class="photo-caption">March Photo 2</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="March Photo 3"><div class="photo-caption">March Photo 3</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="March Photo 4"><div class="photo-caption">March Photo 4</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="March Photo 5"><div class="photo-caption">March Photo 5</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="March Photo 6"><div class="photo-caption">March Photo 6</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="March Photo 7"><div class="photo-caption">March Photo 7</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="March Photo 8"><div class="photo-caption">March Photo 8</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="March Photo 9"><div class="photo-caption">March Photo 9</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="March Photo 10"><div class="photo-caption">March Photo 10</div></div>
+        </div>
+      </section>
+
+      <!-- APRIL (10 PHOTOS) -->
+      <section id="april" class="month-section">
+        <h2 class="month-title">April Memories</h2>
+        <div class="gallery">
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="April Photo 1"><div class="photo-caption">April Photo 1</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="April Photo 2"><div class="photo-caption">April Photo 2</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="April Photo 3"><div class="photo-caption">April Photo 3</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="April Photo 4"><div class="photo-caption">April Photo 4</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="April Photo 5"><div class="photo-caption">April Photo 5</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="April Photo 6"><div class="photo-caption">April Photo 6</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="April Photo 7"><div class="photo-caption">April Photo 7</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="April Photo 8"><div class="photo-caption">April Photo 8</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="April Photo 9"><div class="photo-caption">April Photo 9</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="April Photo 10"><div class="photo-caption">April Photo 10</div></div>
+        </div>
+      </section>
+
+      <!-- MAY (10 PHOTOS) -->
+      <section id="may" class="month-section">
+        <h2 class="month-title">May Memories</h2>
+        <div class="gallery">
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="May Photo 1"><div class="photo-caption">May Photo 1</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="May Photo 2"><div class="photo-caption">May Photo 2</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="May Photo 3"><div class="photo-caption">May Photo 3</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="May Photo 4"><div class="photo-caption">May Photo 4</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="May Photo 5"><div class="photo-caption">May Photo 5</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="May Photo 6"><div class="photo-caption">May Photo 6</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="May Photo 7"><div class="photo-caption">May Photo 7</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="May Photo 8"><div class="photo-caption">May Photo 8</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="May Photo 9"><div class="photo-caption">May Photo 9</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="May Photo 10"><div class="photo-caption">May Photo 10</div></div>
+        </div>
+      </section>
+
+      <!-- JUNE (10 PHOTOS) -->
+      <section id="june" class="month-section">
+        <h2 class="month-title">June Memories</h2>
+        <div class="gallery">
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="June Photo 1"><div class="photo-caption">June Photo 1</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="June Photo 2"><div class="photo-caption">June Photo 2</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="June Photo 3"><div class="photo-caption">June Photo 3</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="June Photo 4"><div class="photo-caption">June Photo 4</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="June Photo 5"><div class="photo-caption">June Photo 5</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="June Photo 6"><div class="photo-caption">June Photo 6</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="June Photo 7"><div class="photo-caption">June Photo 7</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="June Photo 8"><div class="photo-caption">June Photo 8</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="June Photo 9"><div class="photo-caption">June Photo 9</div></div>
+          <div class="photo-card" onclick="openLightbox(this)"><img src="YOUR PHOTO HERE" alt="June Photo 10"><div class="photo-caption">June Photo 10</div></div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <p>Created with 💛 for Section Daffodil</p>
+    </footer>
+
+  </div>
+
+  <!-- Interactive Pop-up Viewer (Lightbox) -->
+  <div id="lightboxModal" class="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightboxImg" src="" alt="Full view">
+    <div id="lightboxCaption" class="lightbox-caption"></div>
+  </div>
+
+  <script>
+    // 1. Function to enter the album from splash screen
+    function enterAlbum() {
+      const splash = document.getElementById('splashScreen');
+      const content = document.getElementById('mainContent');
+      
+      splash.style.opacity = '0';
+      setTimeout(() => {
+        splash.style.display = 'none';
+        content.style.display = 'block';
+        setTimeout(() => {
+          content.style.opacity = '1';
+        }, 50);
+      }, 500);
+    }
+
+    // 2. Function to switch active month section
+    function switchMonth(monthId, clickedBtn) {
+      // Hide all month sections
+      const sections = document.querySelectorAll('.month-section');
+      sections.forEach(sec => sec.classList.remove('active'));
+
+      // Remove active status from all navigation buttons
+      const buttons = document.querySelectorAll('.tab-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+
+      // Show chosen month & set active button
+      document.getElementById(monthId).classList.add('active');
+      clickedBtn.classList.add('active');
+    }
+
+    // 3. Lightbox viewer functions
+    function openLightbox(card) {
+      const img = card.querySelector('img');
+      const caption = card.querySelector('.photo-caption');
+      
+      const lightbox = document.getElementById('lightboxModal');
+      const lightboxImg = document.getElementById('lightboxImg');
+      const lightboxCaption = document.getElementById('lightboxCaption');
+
+      lightboxImg.src = img.src;
+      lightboxCaption.textContent = caption.textContent;
+      lightbox.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightboxModal').style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>
